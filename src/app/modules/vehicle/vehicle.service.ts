@@ -78,6 +78,32 @@ const updateVehicle = async (vehicleId: string, payload: Partial<TVehicle>) => {
   return result;
 };
 
+//delete
+const deleteVehicle = async (vehicleId: string) => {
+  const activeBooking = await pool.query(
+    `
+    SELECT * FROM bookings
+    WHERE vehicle_id = $1 AND status = 'active'
+    `,
+    [vehicleId]
+  );
+
+  if (activeBooking.rows.length > 0) {
+    throw new Error("Cannot delete vehicle with active bookings");
+  }
+
+  const result = await pool.query(
+    `
+    DELETE FROM vehicles
+    WHERE id = $1
+    RETURNING *
+    `,
+    [vehicleId]
+  );
+
+  return result;
+};
+
 export const vehicleServices: {
   createVehicle: (payload: TVehicle) => Promise<QueryResult>;
   getVehicles: () => Promise<QueryResult>;
@@ -85,8 +111,10 @@ export const vehicleServices: {
     vehicleId: string,
     payload: Partial<TVehicle>,
   ) => Promise<QueryResult>;
+  deleteVehicle: (vehicleId: string) => Promise<QueryResult>;
 } = {
   createVehicle,
   getVehicles,
   updateVehicle,
+  deleteVehicle,
 };
