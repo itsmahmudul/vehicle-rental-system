@@ -2,15 +2,14 @@ import { QueryResult } from "pg";
 import { pool } from "../../config/db";
 import { TBooking } from "./booking.interface";
 
-
 //create
 const createBooking = async (
   payload: TBooking,
-  userId: number
+  userId: number,
 ): Promise<QueryResult> => {
   const vehicleResult = await pool.query(
     `SELECT * FROM vehicles WHERE id = $1`,
-    [payload.vehicle_id]
+    [payload.vehicle_id],
   );
 
   const vehicle = vehicleResult.rows[0];
@@ -49,7 +48,7 @@ const createBooking = async (
       payload.rent_end_date,
       totalPrice,
       "active",
-    ]
+    ],
   );
 
   // vehicle booked
@@ -59,12 +58,11 @@ const createBooking = async (
     SET availability_status = 'booked'
     WHERE id = $1
     `,
-    [payload.vehicle_id]
+    [payload.vehicle_id],
   );
 
   return result;
 };
-
 
 //get
 const getBookings = async (user: any) => {
@@ -95,13 +93,63 @@ const getBookings = async (user: any) => {
     JOIN vehicles ON bookings.vehicle_id = vehicles.id
     WHERE bookings.user_id = $1
     `,
-    [user.id]
+    [user.id],
   );
+
+  return result;
+};
+
+//update
+const updateBooking = async (bookingId: string, status: string, user: any) => {
+  const bookingResult = await pool.query(
+    `SELECT * FROM bookings WHERE id = $1`,
+    [bookingId],
+  );
+
+  const booking = bookingResult.rows[0];
+
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+
+  if (user.role === "customer" && booking.user_id !== user.id) {
+    throw new Error("You can only update your own booking");
+  }
+
+  if (user.role === "customer" && status !== "cancelled") {
+    throw new Error("Customer can only cancel booking");
+  }
+
+  if (user.role === "admin" && status !== "returned") {
+    throw new Error("Admin can only mark booking as returned");
+  }
+
+  const result = await pool.query(
+    `
+    UPDATE bookings
+    SET status = $1
+    WHERE id = $2
+    RETURNING *
+    `,
+    [status, bookingId],
+  );
+
+  if (status === "cancelled" || status === "returned") {
+    await pool.query(
+      `
+      UPDATE vehicles
+      SET availability_status = 'available'
+      WHERE id = $1
+      `,
+      [booking.vehicle_id],
+    );
+  }
 
   return result;
 };
 
 export const bookingServices = {
   createBooking,
-  getBookings
+  getBookings,
+  updateBooking
 };
