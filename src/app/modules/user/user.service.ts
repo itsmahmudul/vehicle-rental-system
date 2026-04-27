@@ -12,11 +12,17 @@ const createUser = async (payload: TUser) => {
 
   const result = await pool.query(
     `
-    INSERT INTO users (name, email, password, role)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id, name, email, role, created_at
+    INSERT INTO users (name, email, password, phone, role)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id, name, email, phone, role
     `,
-    [payload.name, payload.email, hashedPassword, payload.role || "user"]
+    [
+      payload.name,
+      payload.email,
+      hashedPassword,
+      payload.phone,
+      payload.role || "customer",
+    ]
   );
 
   return result.rows[0];
@@ -64,6 +70,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       role: user.role,
     },
   };

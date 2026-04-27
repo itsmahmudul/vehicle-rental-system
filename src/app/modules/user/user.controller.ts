@@ -8,12 +8,13 @@ const createUser = async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: result.rows[0],
+      data: result.rows,
     });
   } catch (err: any) {
     res.status(500).json({
       success: false,
       message: err.message,
+      errors: err.message,
     });
   }
 };
@@ -24,14 +25,17 @@ const loginUser = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-      message: "User logged in successfully",
-      token: result.token,
-      data: result.user,
+      message: "Login successful",
+      data: {
+        token: result.token,
+        user: result.user,
+      },
     });
   } catch (err: any) {
     res.status(401).json({
       success: false,
       message: err.message,
+      errors: err.message,
     });
   }
 };

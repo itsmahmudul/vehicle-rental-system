@@ -14,9 +14,19 @@ export const auth = (...requiredRoles: string[]) => {
         });
       }
 
+      // Bearer token remove
+      const splitToken = token.split(" ")[1];
+
+      if (!splitToken) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid token format",
+        });
+      }
+
       const decoded = jwt.verify(
-        token,
-        config.jwt_secret as string,
+        splitToken,
+        config.jwt_secret as string
       ) as JwtPayload;
 
       if (
