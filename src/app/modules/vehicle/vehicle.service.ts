@@ -7,16 +7,16 @@ const createVehicle = async (
 ): Promise<QueryResult> => {
   const result = await pool.query(
     `
-    INSERT INTO vehicles (name, type, registration_number, daily_rent_price, availability)
+    INSERT INTO vehicles (vehicle_name, type, registration_number, daily_rent_price, availability_status)
     VALUES ($1, $2, $3, $4, $5)
     RETURNING *
     `,
     [
-      payload.name,
+      payload.vehicle_name,
       payload.type,
       payload.registration_number,
       payload.daily_rent_price,
-      payload.availability ?? true,
+      payload.availability_status || "available",
     ]
   );
 
