@@ -1,0 +1,1 @@
+{"version":3,"file":"vehicle.interface.d.ts","sourceRoot":"","sources":["../../../../src/app/modules/vehicle/vehicle.interface.ts"],"names":[],"mappings":"AAAA,MAAM,MAAM,QAAQ,GAAG;IACrB,YAAY,EAAE,MAAM,CAAC;IACrB,IAAI,EAAE,MAAM,CAAC;IACb,mBAAmB,EAAE,MAAM,CAAC;IAC5B,gBAAgB,EAAE,MAAM,CAAC;IACzB,mBAAmB,CAAC,EAAE,WAAW,GAAG,QAAQ,CAAC;CAC9C,CAAC"}
