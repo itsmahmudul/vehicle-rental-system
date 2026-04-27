@@ -2,6 +2,8 @@ import { QueryResult } from "pg";
 import { pool } from "../../config/db";
 import { TBooking } from "./booking.interface";
 
+
+//create
 const createBooking = async (
   payload: TBooking,
   userId: number
@@ -63,6 +65,43 @@ const createBooking = async (
   return result;
 };
 
+
+//get
+const getBookings = async (user: any) => {
+  if (user.role === "admin") {
+    const result = await pool.query(`
+      SELECT 
+        bookings.*,
+        users.name AS customer_name,
+        users.email AS customer_email,
+        vehicles.vehicle_name,
+        vehicles.registration_number
+      FROM bookings
+      JOIN users ON bookings.user_id = users.id
+      JOIN vehicles ON bookings.vehicle_id = vehicles.id
+    `);
+
+    return result;
+  }
+
+  const result = await pool.query(
+    `
+    SELECT 
+      bookings.*,
+      vehicles.vehicle_name,
+      vehicles.registration_number,
+      vehicles.type
+    FROM bookings
+    JOIN vehicles ON bookings.vehicle_id = vehicles.id
+    WHERE bookings.user_id = $1
+    `,
+    [user.id]
+  );
+
+  return result;
+};
+
 export const bookingServices = {
   createBooking,
+  getBookings
 };
