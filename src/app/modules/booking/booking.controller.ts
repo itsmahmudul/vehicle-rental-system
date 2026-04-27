@@ -12,7 +12,10 @@ const createBooking = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await bookingServices.createBooking(req.body, Number(userId));
+    const result = await bookingServices.createBooking(
+      req.body,
+      Number(userId),
+    );
 
     res.status(201).json({
       success: true,

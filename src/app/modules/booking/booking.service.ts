@@ -4,11 +4,11 @@ import { TBooking } from "./booking.interface";
 
 const createBooking = async (
   payload: TBooking,
-  userId: number,
+  userId: number
 ): Promise<QueryResult> => {
   const vehicleResult = await pool.query(
     `SELECT * FROM vehicles WHERE id = $1`,
-    [payload.vehicle_id],
+    [payload.vehicle_id]
   );
 
   const vehicle = vehicleResult.rows[0];
@@ -17,52 +17,52 @@ const createBooking = async (
     throw new Error("Vehicle not found");
   }
 
-  if (!vehicle.availability) {
-    throw new Error("Vehicle is not available");
+  if (vehicle.availability_status === "booked") {
+    throw new Error("Vehicle is already booked");
   }
 
-  const startDate = new Date(payload.start_date);
-  const endDate = new Date(payload.end_date);
+  const startDate = new Date(payload.rent_start_date);
+  const endDate = new Date(payload.rent_end_date);
 
-  const timeDifference = endDate.getTime() - startDate.getTime();
-  const totalDays = timeDifference / (1000 * 60 * 60 * 24);
+  const diff = endDate.getTime() - startDate.getTime();
+  const days = diff / (1000 * 60 * 60 * 24);
 
-  if (totalDays <= 0) {
+  if (days <= 0) {
     throw new Error("End date must be after start date");
   }
 
-  const totalCost = totalDays * Number(vehicle.daily_rent_price);
+  const totalPrice = days * Number(vehicle.daily_rent_price);
 
   const result = await pool.query(
     `
-    INSERT INTO bookings (user_id, vehicle_id, start_date, end_date, total_cost, status)
+    INSERT INTO bookings 
+    (user_id, vehicle_id, rent_start_date, rent_end_date, total_price, status)
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING *
     `,
     [
       userId,
       payload.vehicle_id,
-      payload.start_date,
-      payload.end_date,
-      totalCost,
-      "pending",
-    ],
+      payload.rent_start_date,
+      payload.rent_end_date,
+      totalPrice,
+      "active",
+    ]
   );
 
+  // vehicle booked
   await pool.query(
     `
     UPDATE vehicles
-    SET availability = false
+    SET availability_status = 'booked'
     WHERE id = $1
     `,
-    [payload.vehicle_id],
+    [payload.vehicle_id]
   );
 
   return result;
 };
 
-export const bookingServices: {
-  createBooking: (payload: TBooking, userId: number) => Promise<QueryResult>;
-} = {
+export const bookingServices = {
   createBooking,
 };
